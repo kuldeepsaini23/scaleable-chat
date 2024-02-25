@@ -1,8 +1,11 @@
 import http from 'http'
 import SocketServices from './services/socket'; 
+import {config} from 'dotenv'
+import { startMessageConsumer } from './services/kafka';
 
-async function init() {
-
+async function init() { 
+  config();
+  startMessageConsumer();
   const socketService = new SocketServices();
 
   const httpServer = http.createServer();

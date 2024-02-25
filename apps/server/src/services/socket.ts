@@ -1,20 +1,20 @@
 import { Server } from "socket.io";
 import {Redis} from 'ioredis';
-import { channel } from "diagnostics_channel";
+import { produceMessage } from "./kafka";
 
 
 const pub = new Redis({
-  host:'redis-chatapp-kuldeepsaini02311-43f7.a.aivencloud.com',
-  port:17543 ,
-  username:"default" ,
-  password: 'AVNS_rzqUkTXrMIEs_N0OMQO'
+  host:process.env.REDIS_HOST as string,
+  port: parseInt(process.env.REDIS_PORT as string) as unknown as number,
+  username: process.env.REDIS_USERNAME,
+  password: process.env.REDIS_PASSWORD,
 });
 
 const sub = new Redis({
-  host:'redis-chatapp-kuldeepsaini02311-43f7.a.aivencloud.com',
-  port:17543 ,
-  username:"default" ,
-  password: 'AVNS_rzqUkTXrMIEs_N0OMQO'
+  host:process.env.REDIS_HOST as string,
+  port: parseInt(process.env.REDIS_PORT as string) as unknown as number, 
+  username: process.env.REDIS_USERNAME,
+  password: process.env.REDIS_PASSWORD,
 });
 
 class SocketServices {
@@ -46,12 +46,14 @@ class SocketServices {
       })
     })
 
-    sub.on('message', (channel,message)=>{
+    sub.on('message', async(channel,message)=>{
       if(channel === 'MESSAGES'){
         // console.log(`New Message in Sub: ${message}`);
         io.emit('message', {message});
 
         //Store in DB
+        await produceMessage(message);
+        console.log('Message Produced to Kafka Broker');
       }
     })
   }
